@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Station Heatmaps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 90vh; }
+    #controls {
+      padding: 8px;
+      background: white;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>Heat Intensity: <span id="intensityVal">1.0</span></label>
+    <input type="range" id="intensitySlider" min="0.1" max="5" step="0.1" value="1.0">
+  </div>
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Heatmap plugin -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+  <script>
+    // 🔹 Embed your station data here (converted from spreadsheet)
+    const stations = [
+      {
+    "start_lat": 39.94733,
+    "start_lon": -75.144028,
+    "Station_ID": 3005,
+    "Station_Name": "Welcome Park, NPS",
+    "Station_Starts": 13,
+    "Station_Ends": 12,
+    "Station_Activity": 25
+  },
+  {
+    "start_lat": 39.952202,
+    "start_lon": -75.20311,
+    "Station_ID": 3006,
+    "Station_Name": "40th & Spruce",
+    "Station_Starts": 11,
+    "Station_Ends": 8,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.945171,
+    "start_lon": -75.159927,
+    "Station_ID": 3007,
+    "Station_Name": "11th & Pine, Kahn Park",
+    "Station_Starts": 18,
+    "Station_Ends": 21,
+    "Station_Activity": 39
+  },
+  {
+    "start_lat": 39.980808,
+    "start_lon": -75.150673,
+    "Station_ID": 3008,
+    "Station_Name": "Temple University Station",
+    "Station_Starts": 12,
+    "Station_Ends": 7,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.955761,
+    "start_lon": -75.189819,
+    "Station_ID": 3009,
+    "Station_Name": "33rd & Market",
+    "Station_Starts": 17,
+    "Station_Ends": 14,
+    "Station_Activity": 31
+  },
+  {
+    "start_lat": 39.947109,
+    "start_lon": -75.166183,
+    "Station_ID": 3010,
+    "Station_Name": "15th & Spruce",
+    "Station_Starts": 29,
+    "Station_Ends": 28,
+    "Station_Activity": 57
+  },
+  {
+    "start_lat": 39.942181,
+    "start_lon": -75.177467,
+    "Station_ID": 3012,
+    "Station_Name": "21st & Catharine",
+    "Station_Starts": 16,
+    "Station_Ends": 25,
+    "Station_Activity": 41
+  },
+  {
+    "start_lat": 39.958858,
+    "start_lon": -75.173691,
+    "Station_ID": 3014,
+    "Station_Name": "21st & Winter, Franklin Institute",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.94735,
+    "start_lon": -75.148857,
+    "Station_ID": 3015,
+    "Station_Name": "4th & Walnut, NPS",
+    "Station_Starts": 2,
+    "Station_Ends": 4,
+    "Station_Activity": 6
+  },
+  {
+    "start_lat": 39.968922,
+    "start_lon": -75.154701,
+    "Station_ID": 3016,
+    "Station_Name": "11th & Poplar, John F. Street Community Center",
+    "Station_Starts": 1,
+    "Station_Ends": 2,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.98003,
+    "start_lon": -75.143707,
+    "Station_ID": 3017,
+    "Station_Name": "6th & Berks",
+    "Station_Starts": 9,
+    "Station_Ends": 5,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.952728,
+    "start_lon": -75.15979,
+    "Station_ID": 3018,
+    "Station_Name": "12th & Filbert",
+    "Station_Starts": 13,
+    "Station_Ends": 11,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.954029,
+    "start_lon": -75.149834,
+    "Station_ID": 3019,
+    "Station_Name": "6th & Race",
+    "Station_Starts": 3,
+    "Station_Ends": 2,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.948551,
+    "start_lon": -75.190071,
+    "Station_ID": 3020,
+    "Station_Name": "University City Station",
+    "Station_Starts": 51,
+    "Station_Ends": 32,
+    "Station_Activity": 83
+  },
+  {
+    "start_lat": 39.953899,
+    "start_lon": -75.169022,
+    "Station_ID": 3021,
+    "Station_Name": "18th & JFK",
+    "Station_Starts": 15,
+    "Station_Ends": 15,
+    "Station_Activity": 30
+  },
+  {
+    "start_lat": 39.95472,
+    "start_lon": -75.183228,
+    "Station_ID": 3022,
+    "Station_Name": "Amtrak 30th Street Station",
+    "Station_Starts": 18,
+    "Station_Ends": 17,
+    "Station_Activity": 35
+  },
+  {
+    "start_lat": 39.948219,
+    "start_lon": -75.209084,
+    "Station_ID": 3024,
+    "Station_Name": "43rd & Chester, Clark Park",
+    "Station_Starts": 1,
+    "Station_Ends": 3,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.937241,
+    "start_lon": -75.161201,
+    "Station_ID": 3025,
+    "Station_Name": "11th & Washington",
+    "Station_Starts": 9,
+    "Station_Ends": 13,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.941818,
+    "start_lon": -75.1455,
+    "Station_ID": 3026,
+    "Station_Name": "2nd & Lombard",
+    "Station_Starts": 10,
+    "Station_Ends": 15,
+    "Station_Activity": 25
+  },
+  {
+    "start_lat": 39.940609,
+    "start_lon": -75.149582,
+    "Station_ID": 3028,
+    "Station_Name": "4th & Bainbridge",
+    "Station_Starts": 17,
+    "Station_Ends": 14,
+    "Station_Activity": 31
+  },
+  {
+    "start_lat": 39.9538,
+    "start_lon": -75.194794,
+    "Station_ID": 3029,
+    "Station_Name": "36th & Sansom",
+    "Station_Starts": 27,
+    "Station_Ends": 24,
+    "Station_Activity": 51
+  },
+  {
+    "start_lat": 39.93935,
+    "start_lon": -75.157158,
+    "Station_ID": 3030,
+    "Station_Name": "Darien & Catharine",
+    "Station_Starts": 16,
+    "Station_Ends": 13,
+    "Station_Activity": 29
+  },
+  {
+    "start_lat": 39.980049,
+    "start_lon": -75.15522,
+    "Station_ID": 3031,
+    "Station_Name": "13th & Montgomery",
+    "Station_Starts": 12,
+    "Station_Ends": 12,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.945271,
+    "start_lon": -75.17971,
+    "Station_ID": 3032,
+    "Station_Name": "23rd & South",
+    "Station_Starts": 40,
+    "Station_Ends": 43,
+    "Station_Activity": 83
+  },
+  {
+    "start_lat": 39.95005,
+    "start_lon": -75.156723,
+    "Station_ID": 3033,
+    "Station_Name": "10th & Chestnut",
+    "Station_Starts": 11,
+    "Station_Ends": 12,
+    "Station_Activity": 23
+  },
+  {
+    "start_lat": 39.933151,
+    "start_lon": -75.162483,
+    "Station_ID": 3034,
+    "Station_Name": "11th & Reed",
+    "Station_Starts": 19,
+    "Station_Ends": 19,
+    "Station_Activity": 38
+  },
+  {
+    "start_lat": 39.962711,
+    "start_lon": -75.194191,
+    "Station_ID": 3035,
+    "Station_Name": "Dornsife Center",
+    "Station_Starts": 11,
+    "Station_Ends": 12,
+    "Station_Activity": 23
+  },
+  {
+    "start_lat": 39.954239,
+    "start_lon": -75.161377,
+    "Station_ID": 3037,
+    "Station_Name": "Pennsylvania Convention Center",
+    "Station_Starts": 11,
+    "Station_Ends": 8,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.947811,
+    "start_lon": -75.194092,
+    "Station_ID": 3038,
+    "Station_Name": "The Children's Hospital of Philadelphia (CHOP)",
+    "Station_Starts": 20,
+    "Station_Ends": 22,
+    "Station_Activity": 42
+  },
+  {
+    "start_lat": 39.971569,
+    "start_lon": -75.159927,
+    "Station_ID": 3039,
+    "Station_Name": "Broad & Girard",
+    "Station_Starts": 4,
+    "Station_Ends": 3,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.962891,
+    "start_lon": -75.166061,
+    "Station_ID": 3040,
+    "Station_Name": "17th & Spring Garden",
+    "Station_Starts": 13,
+    "Station_Ends": 9,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.968491,
+    "start_lon": -75.13546,
+    "Station_ID": 3041,
+    "Station_Name": "Girard Station, MFL",
+    "Station_Starts": 5,
+    "Station_Ends": 10,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.950729,
+    "start_lon": -75.149467,
+    "Station_ID": 3047,
+    "Station_Name": "Independence Mall, NPS",
+    "Station_Starts": 6,
+    "Station_Ends": 9,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.945091,
+    "start_lon": -75.142502,
+    "Station_ID": 3049,
+    "Station_Name": "Foglietta Plaza",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.967442,
+    "start_lon": -75.175072,
+    "Station_ID": 3051,
+    "Station_Name": "23rd & Fairmount",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.947319,
+    "start_lon": -75.156952,
+    "Station_ID": 3052,
+    "Station_Name": "9th & Locust",
+    "Station_Starts": 18,
+    "Station_Ends": 18,
+    "Station_Activity": 36
+  },
+  {
+    "start_lat": 39.932308,
+    "start_lon": -75.181541,
+    "Station_ID": 3053,
+    "Station_Name": "Point Breeze & Tasker",
+    "Station_Starts": 11,
+    "Station_Ends": 12,
+    "Station_Activity": 23
+  },
+  {
+    "start_lat": 39.962502,
+    "start_lon": -75.174202,
+    "Station_ID": 3054,
+    "Station_Name": "Rodin Museum",
+    "Station_Starts": 22,
+    "Station_Ends": 18,
+    "Station_Activity": 40
+  },
+  {
+    "start_lat": 39.951118,
+    "start_lon": -75.154572,
+    "Station_ID": 3055,
+    "Station_Name": "8th & Market",
+    "Station_Starts": 10,
+    "Station_Ends": 9,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.976688,
+    "start_lon": -75.158127,
+    "Station_ID": 3056,
+    "Station_Name": "Broad & Oxford",
+    "Station_Starts": 4,
+    "Station_Ends": 6,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.96439,
+    "start_lon": -75.179871,
+    "Station_ID": 3057,
+    "Station_Name": "Philadelphia Museum of Art",
+    "Station_Starts": 5,
+    "Station_Ends": 3,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.967159,
+    "start_lon": -75.170013,
+    "Station_ID": 3058,
+    "Station_Name": "20th & Fairmount",
+    "Station_Starts": 16,
+    "Station_Ends": 13,
+    "Station_Activity": 29
+  },
+  {
+    "start_lat": 39.96244,
+    "start_lon": -75.161209,
+    "Station_ID": 3059,
+    "Station_Name": "Spring Garden Station, BSL",
+    "Station_Starts": 17,
+    "Station_Ends": 17,
+    "Station_Activity": 34
+  },
+  {
+    "start_lat": 39.959229,
+    "start_lon": -75.170357,
+    "Station_ID": 3060,
+    "Station_Name": "Free Library of Philadelphia - Central Library",
+    "Station_Starts": 4,
+    "Station_Ends": 7,
+    "Station_Activity": 11
+  },
+  {
+    "start_lat": 39.95425,
+    "start_lon": -75.177612,
+    "Station_ID": 3061,
+    "Station_Name": "23rd & Market",
+    "Station_Starts": 19,
+    "Station_Ends": 15,
+    "Station_Activity": 34
+  },
+  {
+    "start_lat": 39.951969,
+    "start_lon": -75.179428,
+    "Station_ID": 3062,
+    "Station_Name": "24th & Sansom",
+    "Station_Starts": 11,
+    "Station_Ends": 9,
+    "Station_Activity": 20
+  },
+  {
+    "start_lat": 39.946331,
+    "start_lon": -75.1698,
+    "Station_ID": 3063,
+    "Station_Name": "17th & Pine",
+    "Station_Starts": 24,
+    "Station_Ends": 24,
+    "Station_Activity": 48
+  },
+  {
+    "start_lat": 39.9384,
+    "start_lon": -75.173271,
+    "Station_ID": 3064,
+    "Station_Name": "18th & Washington, Chew Playground",
+    "Station_Starts": 14,
+    "Station_Ends": 14,
+    "Station_Activity": 28
+  },
+  {
+    "start_lat": 39.970699,
+    "start_lon": -75.151711,
+    "Station_ID": 3065,
+    "Station_Name": "Girard & Hutchinson",
+    "Station_Starts": 2,
+    "Station_Ends": 1,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.94561,
+    "start_lon": -75.173477,
+    "Station_ID": 3066,
+    "Station_Name": "19th & Lombard",
+    "Station_Starts": 29,
+    "Station_Ends": 30,
+    "Station_Activity": 59
+  },
+  {
+    "start_lat": 39.964111,
+    "start_lon": -75.19973,
+    "Station_ID": 3067,
+    "Station_Name": "39th & Mt. Vernon, Mantua Haverford Community Center",
+    "Station_Starts": 5,
+    "Station_Ends": 4,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.93549,
+    "start_lon": -75.167107,
+    "Station_ID": 3068,
+    "Station_Name": "Broad & Federal",
+    "Station_Starts": 10,
+    "Station_Ends": 12,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.937038,
+    "start_lon": -75.150383,
+    "Station_ID": 3069,
+    "Station_Name": "4th & Christian",
+    "Station_Starts": 6,
+    "Station_Ends": 6,
+    "Station_Activity": 12
+  },
+  {
+    "start_lat": 39.934448,
+    "start_lon": -75.145409,
+    "Station_ID": 3072,
+    "Station_Name": "Front & Carpenter",
+    "Station_Starts": 6,
+    "Station_Ends": 8,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.96143,
+    "start_lon": -75.15242,
+    "Station_ID": 3073,
+    "Station_Name": "9th & Spring Garden",
+    "Station_Starts": 11,
+    "Station_Ends": 13,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.955109,
+    "start_lon": -75.209869,
+    "Station_ID": 3074,
+    "Station_Name": "44th & Walnut",
+    "Station_Starts": 12,
+    "Station_Ends": 10,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.967178,
+    "start_lon": -75.161247,
+    "Station_ID": 3075,
+    "Station_Name": "Fairmount & Ridge",
+    "Station_Starts": 8,
+    "Station_Ends": 9,
+    "Station_Activity": 17
+  },
+  {
+    "start_lat": 39.972069,
+    "start_lon": -75.163513,
+    "Station_ID": 3077,
+    "Station_Name": "17th & Girard",
+    "Station_Starts": 3,
+    "Station_Ends": 4,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.953548,
+    "start_lon": -75.171921,
+    "Station_ID": 3078,
+    "Station_Name": "19th & Market",
+    "Station_Starts": 17,
+    "Station_Ends": 13,
+    "Station_Activity": 30
+  },
+  {
+    "start_lat": 39.940189,
+    "start_lon": -75.166908,
+    "Station_ID": 3086,
+    "Station_Name": "Broad & Christian",
+    "Station_Starts": 6,
+    "Station_Ends": 9,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.969841,
+    "start_lon": -75.1418,
+    "Station_ID": 3088,
+    "Station_Name": "3rd & Girard",
+    "Station_Starts": 9,
+    "Station_Ends": 10,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.988369,
+    "start_lon": -75.187012,
+    "Station_ID": 3093,
+    "Station_Name": "33rd & Diamond",
+    "Station_Starts": 3,
+    "Station_Ends": 3,
+    "Station_Activity": 6
+  },
+  {
+    "start_lat": 39.991192,
+    "start_lon": -75.179749,
+    "Station_ID": 3096,
+    "Station_Name": "29th & Dauphin",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.978882,
+    "start_lon": -75.133392,
+    "Station_ID": 3097,
+    "Station_Name": "Berks Station, MFL",
+    "Station_Starts": 4,
+    "Station_Ends": 10,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.934311,
+    "start_lon": -75.160423,
+    "Station_ID": 3098,
+    "Station_Name": "10th & Federal",
+    "Station_Starts": 8,
+    "Station_Ends": 11,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.93401,
+    "start_lon": -75.15094,
+    "Station_ID": 3099,
+    "Station_Name": "4th & Washington",
+    "Station_Starts": 6,
+    "Station_Ends": 10,
+    "Station_Activity": 16
+  },
+  {
+    "start_lat": 39.927769,
+    "start_lon": -75.151031,
+    "Station_ID": 3100,
+    "Station_Name": "Moyamensing & Tasker",
+    "Station_Starts": 8,
+    "Station_Ends": 9,
+    "Station_Activity": 17
+  },
+  {
+    "start_lat": 39.942951,
+    "start_lon": -75.159554,
+    "Station_ID": 3101,
+    "Station_Name": "11th & South",
+    "Station_Starts": 21,
+    "Station_Ends": 19,
+    "Station_Activity": 40
+  },
+  {
+    "start_lat": 39.96759,
+    "start_lon": -75.17952,
+    "Station_ID": 3102,
+    "Station_Name": "Pennsylvania & Fairmount Perelman Building",
+    "Station_Starts": 8,
+    "Station_Ends": 14,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.96664,
+    "start_lon": -75.192093,
+    "Station_ID": 3104,
+    "Station_Name": "34th & Mantua",
+    "Station_Starts": 6,
+    "Station_Ends": 6,
+    "Station_Activity": 12
+  },
+  {
+    "start_lat": 39.991791,
+    "start_lon": -75.186371,
+    "Station_ID": 3106,
+    "Station_Name": "33rd & Dauphin",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.982029,
+    "start_lon": -75.18866,
+    "Station_ID": 3107,
+    "Station_Name": "33rd & Reservoir",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.96175,
+    "start_lon": -75.136414,
+    "Station_ID": 3110,
+    "Station_Name": "Del. River Trail & Penn St.",
+    "Station_Starts": 4,
+    "Station_Ends": 3,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.977791,
+    "start_lon": -75.213226,
+    "Station_ID": 3111,
+    "Station_Name": "Parkside & Belmont, Case Building",
+    "Station_Starts": 0,
+    "Station_Ends": 1,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.953732,
+    "start_lon": -75.218246,
+    "Station_ID": 3112,
+    "Station_Name": "48th & Spruce",
+    "Station_Starts": 4,
+    "Station_Ends": 4,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.97472,
+    "start_lon": -75.197807,
+    "Station_ID": 3113,
+    "Station_Name": "Philadelphia Zoo",
+    "Station_Starts": 1,
+    "Station_Ends": 2,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.937752,
+    "start_lon": -75.180122,
+    "Station_ID": 3114,
+    "Station_Name": "22nd & Federal",
+    "Station_Starts": 10,
+    "Station_Ends": 10,
+    "Station_Activity": 20
+  },
+  {
+    "start_lat": 39.97263,
+    "start_lon": -75.167572,
+    "Station_ID": 3115,
+    "Station_Name": "19th & Girard, PTTI",
+    "Station_Starts": 5,
+    "Station_Ends": 7,
+    "Station_Activity": 12
+  },
+  {
+    "start_lat": 39.96006,
+    "start_lon": -75.171982,
+    "Station_ID": 3116,
+    "Station_Name": "Barnes Foundation",
+    "Station_Starts": 3,
+    "Station_Ends": 4,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.978409,
+    "start_lon": -75.223991,
+    "Station_ID": 3117,
+    "Station_Name": "ParkWest Town Center",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.95866,
+    "start_lon": -75.213226,
+    "Station_ID": 3118,
+    "Station_Name": "46th Street Station, MFL",
+    "Station_Starts": 5,
+    "Station_Ends": 3,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.96674,
+    "start_lon": -75.207993,
+    "Station_ID": 3119,
+    "Station_Name": "42nd & Lancaster",
+    "Station_Starts": 3,
+    "Station_Ends": 4,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.97522,
+    "start_lon": -75.186691,
+    "Station_ID": 3120,
+    "Station_Name": "31st & Girard",
+    "Station_Starts": 7,
+    "Station_Ends": 13,
+    "Station_Activity": 20
+  },
+  {
+    "start_lat": 39.980042,
+    "start_lon": -75.170883,
+    "Station_ID": 3123,
+    "Station_Name": "22nd & Cecil B. Moore",
+    "Station_Starts": 2,
+    "Station_Ends": 3,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.953671,
+    "start_lon": -75.139557,
+    "Station_ID": 3124,
+    "Station_Name": "Race Street Pier",
+    "Station_Starts": 4,
+    "Station_Ends": 6,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.943909,
+    "start_lon": -75.167351,
+    "Station_ID": 3125,
+    "Station_Name": "15th & South",
+    "Station_Starts": 17,
+    "Station_Ends": 13,
+    "Station_Activity": 30
+  },
+  {
+    "start_lat": 39.928841,
+    "start_lon": -75.170212,
+    "Station_ID": 3150,
+    "Station_Name": "15th & Castle, DiSilvestro Playground",
+    "Station_Starts": 11,
+    "Station_Ends": 13,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.949928,
+    "start_lon": -75.202858,
+    "Station_ID": 3152,
+    "Station_Name": "40th & Baltimore, Trolley Portal",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.95924,
+    "start_lon": -75.158211,
+    "Station_ID": 3154,
+    "Station_Name": "12th & Callowhill",
+    "Station_Starts": 9,
+    "Station_Ends": 9,
+    "Station_Activity": 18
+  },
+  {
+    "start_lat": 39.940182,
+    "start_lon": -75.154419,
+    "Station_ID": 3155,
+    "Station_Name": "7th & Fitzwater",
+    "Station_Starts": 13,
+    "Station_Ends": 11,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.953812,
+    "start_lon": -75.174072,
+    "Station_ID": 3156,
+    "Station_Name": "20th & Market",
+    "Station_Starts": 17,
+    "Station_Ends": 17,
+    "Station_Activity": 34
+  },
+  {
+    "start_lat": 39.925449,
+    "start_lon": -75.159538,
+    "Station_ID": 3157,
+    "Station_Name": "8th & Mifflin, Bok Building",
+    "Station_Starts": 10,
+    "Station_Ends": 11,
+    "Station_Activity": 21
+  },
+  {
+    "start_lat": 39.925522,
+    "start_lon": -75.169037,
+    "Station_ID": 3158,
+    "Station_Name": "Broad & Passyunk",
+    "Station_Starts": 8,
+    "Station_Ends": 6,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.95121,
+    "start_lon": -75.199623,
+    "Station_ID": 3159,
+    "Station_Name": "38th & Spruce",
+    "Station_Starts": 16,
+    "Station_Ends": 13,
+    "Station_Activity": 29
+  },
+  {
+    "start_lat": 39.956619,
+    "start_lon": -75.198624,
+    "Station_ID": 3160,
+    "Station_Name": "38th & Market",
+    "Station_Starts": 13,
+    "Station_Ends": 12,
+    "Station_Activity": 25
+  },
+  {
+    "start_lat": 39.954861,
+    "start_lon": -75.180908,
+    "Station_ID": 3161,
+    "Station_Name": "30th Street Station East",
+    "Station_Starts": 20,
+    "Station_Ends": 21,
+    "Station_Activity": 41
+  },
+  {
+    "start_lat": 39.94595,
+    "start_lon": -75.184753,
+    "Station_ID": 3162,
+    "Station_Name": "27th & South",
+    "Station_Starts": 8,
+    "Station_Ends": 8,
+    "Station_Activity": 16
+  },
+  {
+    "start_lat": 39.949741,
+    "start_lon": -75.180969,
+    "Station_ID": 3163,
+    "Station_Name": "25th & Locust",
+    "Station_Starts": 11,
+    "Station_Ends": 11,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.928139,
+    "start_lon": -75.165154,
+    "Station_ID": 3164,
+    "Station_Name": "12th & Passyunk",
+    "Station_Starts": 14,
+    "Station_Ends": 15,
+    "Station_Activity": 29
+  },
+  {
+    "start_lat": 39.958191,
+    "start_lon": -75.1782,
+    "Station_ID": 3165,
+    "Station_Name": "24th & Race SRT",
+    "Station_Starts": 13,
+    "Station_Ends": 11,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.971951,
+    "start_lon": -75.134453,
+    "Station_ID": 3166,
+    "Station_Name": "Frankford & Belgrade",
+    "Station_Starts": 8,
+    "Station_Ends": 7,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.95134,
+    "start_lon": -75.173943,
+    "Station_ID": 3168,
+    "Station_Name": "20th & Sansom",
+    "Station_Starts": 15,
+    "Station_Ends": 9,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.953819,
+    "start_lon": -75.142632,
+    "Station_ID": 3169,
+    "Station_Name": "2nd & Race",
+    "Station_Starts": 12,
+    "Station_Ends": 7,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.89629,
+    "start_lon": -75.17514,
+    "Station_ID": 3181,
+    "Station_Name": "Crescent Park",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.950809,
+    "start_lon": -75.169533,
+    "Station_ID": 3182,
+    "Station_Name": "17th & Sansom",
+    "Station_Starts": 10,
+    "Station_Ends": 11,
+    "Station_Activity": 21
+  },
+  {
+    "start_lat": 39.889938,
+    "start_lon": -75.176788,
+    "Station_ID": 3183,
+    "Station_Name": "15th & Kitty Hawk",
+    "Station_Starts": 1,
+    "Station_Ends": 2,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.945728,
+    "start_lon": -75.195511,
+    "Station_ID": 3184,
+    "Station_Name": "Health Sciences Drive",
+    "Station_Starts": 4,
+    "Station_Ends": 1,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.951691,
+    "start_lon": -75.158882,
+    "Station_ID": 3185,
+    "Station_Name": "11th & Market",
+    "Station_Starts": 21,
+    "Station_Ends": 23,
+    "Station_Activity": 44
+  },
+  {
+    "start_lat": 39.957249,
+    "start_lon": -75.172318,
+    "Station_ID": 3187,
+    "Station_Name": "20th & Race",
+    "Station_Starts": 6,
+    "Station_Ends": 9,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.904709,
+    "start_lon": -75.173401,
+    "Station_ID": 3188,
+    "Station_Name": "Broad & Pattison, BSL",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.987171,
+    "start_lon": -75.174767,
+    "Station_ID": 3196,
+    "Station_Name": "25th & Diamond",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.92083,
+    "start_lon": -75.170326,
+    "Station_ID": 3197,
+    "Station_Name": "Broad & Ritner",
+    "Station_Starts": 4,
+    "Station_Ends": 6,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.97583,
+    "start_lon": -75.168457,
+    "Station_ID": 3200,
+    "Station_Name": "Ridge & Master",
+    "Station_Starts": 4,
+    "Station_Ends": 4,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.955231,
+    "start_lon": -75.166199,
+    "Station_ID": 3201,
+    "Station_Name": "16th & Arch",
+    "Station_Starts": 18,
+    "Station_Ends": 17,
+    "Station_Activity": 35
+  },
+  {
+    "start_lat": 39.940769,
+    "start_lon": -75.172272,
+    "Station_ID": 3203,
+    "Station_Name": "18th & Christian",
+    "Station_Starts": 26,
+    "Station_Ends": 25,
+    "Station_Activity": 51
+  },
+  {
+    "start_lat": 39.964371,
+    "start_lon": -75.165817,
+    "Station_ID": 3204,
+    "Station_Name": "17th & Green",
+    "Station_Starts": 7,
+    "Station_Ends": 13,
+    "Station_Activity": 20
+  },
+  {
+    "start_lat": 39.954048,
+    "start_lon": -75.167831,
+    "Station_ID": 3205,
+    "Station_Name": "17th & JFK",
+    "Station_Starts": 19,
+    "Station_Ends": 13,
+    "Station_Activity": 32
+  },
+  {
+    "start_lat": 39.954411,
+    "start_lon": -75.192001,
+    "Station_ID": 3207,
+    "Station_Name": "34th & Chestnut",
+    "Station_Starts": 12,
+    "Station_Ends": 11,
+    "Station_Activity": 23
+  },
+  {
+    "start_lat": 39.950481,
+    "start_lon": -75.193237,
+    "Station_ID": 3208,
+    "Station_Name": "34th & Spruce",
+    "Station_Starts": 32,
+    "Station_Ends": 32,
+    "Station_Activity": 64
+  },
+  {
+    "start_lat": 39.949001,
+    "start_lon": -75.212784,
+    "Station_ID": 3209,
+    "Station_Name": "45th & Baltimore",
+    "Station_Starts": 5,
+    "Station_Ends": 6,
+    "Station_Activity": 11
+  },
+  {
+    "start_lat": 39.984921,
+    "start_lon": -75.156677,
+    "Station_ID": 3210,
+    "Station_Name": "Broad & Diamond",
+    "Station_Starts": 9,
+    "Station_Ends": 10,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.971722,
+    "start_lon": -75.170601,
+    "Station_ID": 3211,
+    "Station_Name": "Corinthian & Poplar",
+    "Station_Starts": 4,
+    "Station_Ends": 5,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.963829,
+    "start_lon": -75.18177,
+    "Station_ID": 3212,
+    "Station_Name": "Schuylkill Banks Pergola",
+    "Station_Starts": 5,
+    "Station_Ends": 5,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.98101,
+    "start_lon": -75.137207,
+    "Station_ID": 3226,
+    "Station_Name": "2nd & Norris",
+    "Station_Starts": 2,
+    "Station_Ends": 1,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.959999,
+    "start_lon": -75.1651,
+    "Station_ID": 3235,
+    "Station_Name": "16th & Callowhill",
+    "Station_Starts": 11,
+    "Station_Ends": 5,
+    "Station_Activity": 16
+  },
+  {
+    "start_lat": 39.96566,
+    "start_lon": -75.17765,
+    "Station_ID": 3236,
+    "Station_Name": "24th & Pennsylvania",
+    "Station_Starts": 5,
+    "Station_Ends": 5,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.917171,
+    "start_lon": -75.170959,
+    "Station_ID": 3237,
+    "Station_Name": "Broad & Oregon",
+    "Station_Starts": 3,
+    "Station_Ends": 2,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.946281,
+    "start_lon": -75.151382,
+    "Station_ID": 3238,
+    "Station_Name": "6th & S Washington Square",
+    "Station_Starts": 16,
+    "Station_Ends": 11,
+    "Station_Activity": 27
+  },
+  {
+    "start_lat": 39.962769,
+    "start_lon": -75.211853,
+    "Station_ID": 3240,
+    "Station_Name": "44th & Haverford",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.952251,
+    "start_lon": -75.226372,
+    "Station_ID": 3241,
+    "Station_Name": "52nd & Larchwood - Malcolm X Park",
+    "Station_Starts": 3,
+    "Station_Ends": 1,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.983501,
+    "start_lon": -75.14743,
+    "Station_ID": 3243,
+    "Station_Name": "8th & Diamond",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.938648,
+    "start_lon": -75.16674,
+    "Station_ID": 3244,
+    "Station_Name": "Broad & Carpenter",
+    "Station_Starts": 27,
+    "Station_Ends": 28,
+    "Station_Activity": 55
+  },
+  {
+    "start_lat": 39.97887,
+    "start_lon": -75.157768,
+    "Station_ID": 3245,
+    "Station_Name": "Broad & Cecil B Moore",
+    "Station_Starts": 8,
+    "Station_Ends": 6,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.947819,
+    "start_lon": -75.223007,
+    "Station_ID": 3246,
+    "Station_Name": "50th & Baltimore",
+    "Station_Starts": 2,
+    "Station_Ends": 3,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.965382,
+    "start_lon": -75.215141,
+    "Station_ID": 3247,
+    "Station_Name": "47th & Aspen - Lucien Blackwell",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.942131,
+    "start_lon": -75.18335,
+    "Station_ID": 3248,
+    "Station_Name": "24th & Christian",
+    "Station_Starts": 12,
+    "Station_Ends": 9,
+    "Station_Activity": 21
+  },
+  {
+    "start_lat": 39.95784,
+    "start_lon": -75.190788,
+    "Station_ID": 3249,
+    "Station_Name": "34th & Arch",
+    "Station_Starts": 6,
+    "Station_Ends": 3,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.95673,
+    "start_lon": -75.145752,
+    "Station_ID": 3250,
+    "Station_Name": "4th & Wood",
+    "Station_Starts": 0,
+    "Station_Ends": 1,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.933659,
+    "start_lon": -75.193192,
+    "Station_ID": 3251,
+    "Station_Name": "29th & Tasker",
+    "Station_Starts": 2,
+    "Station_Ends": 5,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.93882,
+    "start_lon": -75.193237,
+    "Station_ID": 3252,
+    "Station_Name": "30th & Oakford",
+    "Station_Starts": 7,
+    "Station_Ends": 6,
+    "Station_Activity": 13
+  },
+  {
+    "start_lat": 39.93074,
+    "start_lon": -75.18924,
+    "Station_ID": 3253,
+    "Station_Name": "27th & Morris - Vare Recreation Center",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.980911,
+    "start_lon": -75.160652,
+    "Station_ID": 3254,
+    "Station_Name": "16th & Montgomery",
+    "Station_Starts": 8,
+    "Station_Ends": 9,
+    "Station_Activity": 17
+  },
+  {
+    "start_lat": 39.950951,
+    "start_lon": -75.164383,
+    "Station_ID": 3255,
+    "Station_Name": "Broad & Chestnut",
+    "Station_Starts": 18,
+    "Station_Ends": 13,
+    "Station_Activity": 31
+  },
+  {
+    "start_lat": 39.95269,
+    "start_lon": -75.177788,
+    "Station_ID": 3256,
+    "Station_Name": "23rd & Chestnut",
+    "Station_Starts": 36,
+    "Station_Ends": 20,
+    "Station_Activity": 56
+  },
+  {
+    "start_lat": 39.958279,
+    "start_lon": -75.224243,
+    "Station_ID": 3258,
+    "Station_Name": "52nd & Chestnut",
+    "Station_Starts": 4,
+    "Station_Ends": 4,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.95998,
+    "start_lon": -75.19883,
+    "Station_ID": 3259,
+    "Station_Name": "Saunders & Pearl",
+    "Station_Starts": 4,
+    "Station_Ends": 3,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.963039,
+    "start_lon": -75.140991,
+    "Station_ID": 3261,
+    "Station_Name": "2nd & Brown",
+    "Station_Starts": 3,
+    "Station_Ends": 5,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.958599,
+    "start_lon": -75.208099,
+    "Station_ID": 3263,
+    "Station_Name": "43rd & Powelton",
+    "Station_Starts": 5,
+    "Station_Ends": 4,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.945709,
+    "start_lon": -75.155083,
+    "Station_ID": 3264,
+    "Station_Name": "8th & Spruce",
+    "Station_Starts": 13,
+    "Station_Ends": 13,
+    "Station_Activity": 26
+  },
+  {
+    "start_lat": 39.959572,
+    "start_lon": -75.196327,
+    "Station_ID": 3265,
+    "Station_Name": "Powelton & Lancaster",
+    "Station_Starts": 5,
+    "Station_Ends": 2,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.923698,
+    "start_lon": -75.147011,
+    "Station_ID": 3266,
+    "Station_Name": "Water & Mifflin",
+    "Station_Starts": 6,
+    "Station_Ends": 4,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.917999,
+    "start_lon": -75.179604,
+    "Station_ID": 3267,
+    "Station_Name": "19th & Oregon",
+    "Station_Starts": 5,
+    "Station_Ends": 3,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.97633,
+    "start_lon": -75.151009,
+    "Station_ID": 3268,
+    "Station_Name": "10th & Oxford",
+    "Station_Starts": 2,
+    "Station_Ends": 5,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.947601,
+    "start_lon": -75.229462,
+    "Station_ID": 3271,
+    "Station_Name": "53rd & Baltimore",
+    "Station_Starts": 2,
+    "Station_Ends": 1,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.96405,
+    "start_lon": -75.220482,
+    "Station_ID": 3272,
+    "Station_Name": "50th & Haverford",
+    "Station_Starts": 1,
+    "Station_Ends": 0,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.975761,
+    "start_lon": -75.121567,
+    "Station_ID": 3275,
+    "Station_Name": "York & Aramingo",
+    "Station_Starts": 4,
+    "Station_Ends": 4,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.965691,
+    "start_lon": -75.156792,
+    "Station_ID": 3276,
+    "Station_Name": "12th & Fairmount",
+    "Station_Starts": 5,
+    "Station_Ends": 3,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.983059,
+    "start_lon": -75.167381,
+    "Station_ID": 3277,
+    "Station_Name": "20th & Berks",
+    "Station_Starts": 3,
+    "Station_Ends": 4,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.993011,
+    "start_lon": -75.168098,
+    "Station_ID": 3278,
+    "Station_Name": "22nd & Sedgley",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.926498,
+    "start_lon": -75.166801,
+    "Station_ID": 3279,
+    "Station_Name": "13th & Mifflin",
+    "Station_Starts": 7,
+    "Station_Ends": 7,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.939678,
+    "start_lon": -75.213623,
+    "Station_ID": 3280,
+    "Station_Name": "50th & Woodland",
+    "Station_Starts": 0,
+    "Station_Ends": 1,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.932301,
+    "start_lon": -75.216202,
+    "Station_ID": 3281,
+    "Station_Name": "Lindbergh & Wheeler",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.986279,
+    "start_lon": -75.149246,
+    "Station_ID": 3282,
+    "Station_Name": "10th & Nevada",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 40.01112,
+    "start_lon": -75.192871,
+    "Station_ID": 3284,
+    "Station_Name": "Midvale & Cresson",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.959461,
+    "start_lon": -75.147453,
+    "Station_ID": 3285,
+    "Station_Name": "5th & Willow",
+    "Station_Starts": 5,
+    "Station_Ends": 2,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.964088,
+    "start_lon": -75.14769,
+    "Station_ID": 3286,
+    "Station_Name": "6th & Brown",
+    "Station_Starts": 4,
+    "Station_Ends": 6,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.943668,
+    "start_lon": -75.216057,
+    "Station_ID": 3287,
+    "Station_Name": "49th & Chester",
+    "Station_Starts": 2,
+    "Station_Ends": 3,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 40.01022,
+    "start_lon": -75.196999,
+    "Station_ID": 3291,
+    "Station_Name": "Ridge & Heritage",
+    "Station_Starts": 0,
+    "Station_Ends": 1,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.919998,
+    "start_lon": -75.156197,
+    "Station_ID": 3292,
+    "Station_Name": "5th & Wolf",
+    "Station_Starts": 7,
+    "Station_Ends": 7,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.95174,
+    "start_lon": -75.170631,
+    "Station_ID": 3294,
+    "Station_Name": "18th & Chestnut",
+    "Station_Starts": 12,
+    "Station_Ends": 11,
+    "Station_Activity": 23
+  },
+  {
+    "start_lat": 39.950279,
+    "start_lon": -75.160271,
+    "Station_ID": 3295,
+    "Station_Name": "12th & Chestnut",
+    "Station_Starts": 16,
+    "Station_Ends": 16,
+    "Station_Activity": 32
+  },
+  {
+    "start_lat": 39.95134,
+    "start_lon": -75.16758,
+    "Station_ID": 3296,
+    "Station_Name": "16th & Chestnut",
+    "Station_Starts": 19,
+    "Station_Ends": 17,
+    "Station_Activity": 36
+  },
+  {
+    "start_lat": 39.95821,
+    "start_lon": -75.169006,
+    "Station_ID": 3297,
+    "Station_Name": "18th & Vine",
+    "Station_Starts": 9,
+    "Station_Ends": 6,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.94717,
+    "start_lon": -75.206909,
+    "Station_ID": 3298,
+    "Station_Name": "42nd & Woodland",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.943321,
+    "start_lon": -75.156982,
+    "Station_ID": 3299,
+    "Station_Name": "9th & Lombard",
+    "Station_Starts": 17,
+    "Station_Ends": 19,
+    "Station_Activity": 36
+  },
+  {
+    "start_lat": 39.955109,
+    "start_lon": -75.162872,
+    "Station_ID": 3300,
+    "Station_Name": "Broad & Cherry",
+    "Station_Starts": 5,
+    "Station_Ends": 4,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.950291,
+    "start_lon": -75.171257,
+    "Station_ID": 3301,
+    "Station_Name": "18th & Walnut",
+    "Station_Starts": 8,
+    "Station_Ends": 12,
+    "Station_Activity": 20
+  },
+  {
+    "start_lat": 39.955898,
+    "start_lon": -75.205299,
+    "Station_ID": 3303,
+    "Station_Name": "41st & Chestnut",
+    "Station_Starts": 5,
+    "Station_Ends": 4,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.942341,
+    "start_lon": -75.153992,
+    "Station_ID": 3304,
+    "Station_Name": "7th & South",
+    "Station_Starts": 10,
+    "Station_Ends": 12,
+    "Station_Activity": 22
+  },
+  {
+    "start_lat": 39.995689,
+    "start_lon": -75.167099,
+    "Station_ID": 3305,
+    "Station_Name": "22nd & Lehigh",
+    "Station_Starts": 0,
+    "Station_Ends": 1,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.99683,
+    "start_lon": -75.177612,
+    "Station_ID": 3306,
+    "Station_Name": "28th & Lehigh",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 40.0028,
+    "start_lon": -75.174004,
+    "Station_ID": 3307,
+    "Station_Name": "27th & Clearfield",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.98024,
+    "start_lon": -75.186508,
+    "Station_ID": 3310,
+    "Station_Name": "Oxford & Glenwood",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.915798,
+    "start_lon": -75.164299,
+    "Station_ID": 3313,
+    "Station_Name": "10th & Oregon",
+    "Station_Starts": 0,
+    "Station_Ends": 2,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.936821,
+    "start_lon": -75.14492,
+    "Station_ID": 3314,
+    "Station_Name": "Front & Queen",
+    "Station_Starts": 4,
+    "Station_Ends": 4,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.942348,
+    "start_lon": -75.21138,
+    "Station_ID": 3315,
+    "Station_Name": "48th & Woodland",
+    "Station_Starts": 1,
+    "Station_Ends": 2,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.92255,
+    "start_lon": -75.17337,
+    "Station_ID": 3316,
+    "Station_Name": "16th & Wolf",
+    "Station_Starts": 3,
+    "Station_Ends": 8,
+    "Station_Activity": 11
+  },
+  {
+    "start_lat": 39.95182,
+    "start_lon": -75.163948,
+    "Station_ID": 3318,
+    "Station_Name": "City Hall South",
+    "Station_Starts": 7,
+    "Station_Ends": 6,
+    "Station_Activity": 13
+  },
+  {
+    "start_lat": 39.966721,
+    "start_lon": -75.129639,
+    "Station_ID": 3319,
+    "Station_Name": "Penn Treaty Park",
+    "Station_Starts": 4,
+    "Station_Ends": 4,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.974602,
+    "start_lon": -75.159172,
+    "Station_ID": 3320,
+    "Station_Name": "Broad & Master",
+    "Station_Starts": 3,
+    "Station_Ends": 2,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.954849,
+    "start_lon": -75.172981,
+    "Station_ID": 3321,
+    "Station_Name": "20th & Cuthbert",
+    "Station_Starts": 6,
+    "Station_Ends": 6,
+    "Station_Activity": 12
+  },
+  {
+    "start_lat": 39.936378,
+    "start_lon": -75.155258,
+    "Station_ID": 3322,
+    "Station_Name": "7th & Passyunk",
+    "Station_Starts": 7,
+    "Station_Ends": 7,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 40.027962,
+    "start_lon": -75.227699,
+    "Station_ID": 3323,
+    "Station_Name": "Manayunk Bridge",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.994839,
+    "start_lon": -75.192421,
+    "Station_ID": 3324,
+    "Station_Name": "Kelly Drive - Strawberry Mansion Bridge",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.976799,
+    "start_lon": -75.12764,
+    "Station_ID": 3325,
+    "Station_Name": "Cedar & Norris",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.991982,
+    "start_lon": -75.19944,
+    "Station_ID": 3326,
+    "Station_Name": "M.L.K. Drive - Strawberry Mansion Bridge",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.977589,
+    "start_lon": -75.12442,
+    "Station_ID": 3327,
+    "Station_Name": "York & Gaul",
+    "Station_Starts": 0,
+    "Station_Ends": 3,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.98798,
+    "start_lon": -75.199501,
+    "Station_ID": 3328,
+    "Station_Name": "Kelly Drive Grandstand",
+    "Station_Starts": 1,
+    "Station_Ends": 0,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 40.026508,
+    "start_lon": -75.224449,
+    "Station_ID": 3329,
+    "Station_Name": "Cresson & Levering",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.971161,
+    "start_lon": -75.128128,
+    "Station_ID": 3331,
+    "Station_Name": "Girard & Palmer",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 40.005371,
+    "start_lon": -75.181427,
+    "Station_ID": 3332,
+    "Station_Name": "32nd & Allegheny",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.954102,
+    "start_lon": -75.169647,
+    "Station_ID": 3333,
+    "Station_Name": "18th & JFK Curbside",
+    "Station_Starts": 15,
+    "Station_Ends": 9,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.930199,
+    "start_lon": -75.156357,
+    "Station_ID": 3334,
+    "Station_Name": "7th & Dickinson",
+    "Station_Starts": 9,
+    "Station_Ends": 9,
+    "Station_Activity": 18
+  },
+  {
+    "start_lat": 40.022369,
+    "start_lon": -75.218002,
+    "Station_ID": 3335,
+    "Station_Name": "Main & Shurs",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.957191,
+    "start_lon": -75.193878,
+    "Station_ID": 3336,
+    "Station_Name": "36th & Filbert",
+    "Station_Starts": 8,
+    "Station_Ends": 7,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.973179,
+    "start_lon": -75.146118,
+    "Station_ID": 3337,
+    "Station_Name": "6th & Master",
+    "Station_Starts": 6,
+    "Station_Ends": 4,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.950981,
+    "start_lon": -75.230347,
+    "Station_ID": 3338,
+    "Station_Name": "54th & Cedar",
+    "Station_Starts": 2,
+    "Station_Ends": 1,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.969059,
+    "start_lon": -75.181686,
+    "Station_ID": 3340,
+    "Station_Name": "27th & Pennsylvania",
+    "Station_Starts": 17,
+    "Station_Ends": 17,
+    "Station_Activity": 34
+  },
+  {
+    "start_lat": 39.981312,
+    "start_lon": -75.127319,
+    "Station_ID": 3341,
+    "Station_Name": "York & Trenton",
+    "Station_Starts": 6,
+    "Station_Ends": 5,
+    "Station_Activity": 11
+  },
+  {
+    "start_lat": 39.963902,
+    "start_lon": -75.173851,
+    "Station_ID": 3342,
+    "Station_Name": "22nd & Spring Garden",
+    "Station_Starts": 9,
+    "Station_Ends": 8,
+    "Station_Activity": 17
+  },
+  {
+    "start_lat": 39.95961,
+    "start_lon": -75.233543,
+    "Station_ID": 3344,
+    "Station_Name": "56th & Chestnut",
+    "Station_Starts": 1,
+    "Station_Ends": 0,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.9617,
+    "start_lon": -75.146667,
+    "Station_ID": 3345,
+    "Station_Name": "5th & Spring Garden",
+    "Station_Starts": 9,
+    "Station_Ends": 9,
+    "Station_Activity": 18
+  },
+  {
+    "start_lat": 39.94883,
+    "start_lon": -75.15097,
+    "Station_ID": 3346,
+    "Station_Name": "6th & Chestnut",
+    "Station_Starts": 15,
+    "Station_Ends": 20,
+    "Station_Activity": 35
+  },
+  {
+    "start_lat": 39.954842,
+    "start_lon": -75.154488,
+    "Station_ID": 3347,
+    "Station_Name": "9th & Race",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.936508,
+    "start_lon": -75.186211,
+    "Station_ID": 3349,
+    "Station_Name": "25th & Wharton",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.994148,
+    "start_lon": -75.155273,
+    "Station_ID": 3350,
+    "Station_Name": "Broad & Lehigh",
+    "Station_Starts": 2,
+    "Station_Ends": 0,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.996552,
+    "start_lon": -75.14991,
+    "Station_ID": 3351,
+    "Station_Name": "12th & Cambria",
+    "Station_Starts": 0,
+    "Station_Ends": 1,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 40.001431,
+    "start_lon": -75.152557,
+    "Station_ID": 3352,
+    "Station_Name": "Broad & Allegheny",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 40.004959,
+    "start_lon": -75.152328,
+    "Station_ID": 3353,
+    "Station_Name": "Broad & Ontario, Temple Hospital",
+    "Station_Starts": 3,
+    "Station_Ends": 1,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.95628,
+    "start_lon": -75.238701,
+    "Station_ID": 3354,
+    "Station_Name": "58th & Spruce",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.893219,
+    "start_lon": -75.171867,
+    "Station_ID": 3356,
+    "Station_Name": "12th & Normandy",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.9104,
+    "start_lon": -75.165878,
+    "Station_ID": 3357,
+    "Station_Name": "10th & Packer",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.948879,
+    "start_lon": -75.169777,
+    "Station_ID": 3359,
+    "Station_Name": "17th & Locust",
+    "Station_Starts": 34,
+    "Station_Ends": 27,
+    "Station_Activity": 61
+  },
+  {
+    "start_lat": 39.933041,
+    "start_lon": -75.168221,
+    "Station_ID": 3360,
+    "Station_Name": "Broad & Reed",
+    "Station_Starts": 6,
+    "Station_Ends": 7,
+    "Station_Activity": 13
+  },
+  {
+    "start_lat": 39.93082,
+    "start_lon": -75.174744,
+    "Station_ID": 3361,
+    "Station_Name": "18th & Fernon, Aquinas Center",
+    "Station_Starts": 8,
+    "Station_Ends": 11,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.948158,
+    "start_lon": -75.162262,
+    "Station_ID": 3362,
+    "Station_Name": "13th & Locust",
+    "Station_Starts": 24,
+    "Station_Ends": 23,
+    "Station_Activity": 47
+  },
+  {
+    "start_lat": 39.946548,
+    "start_lon": -75.162628,
+    "Station_ID": 3363,
+    "Station_Name": "13th & Spruce",
+    "Station_Starts": 14,
+    "Station_Ends": 12,
+    "Station_Activity": 26
+  },
+  {
+    "start_lat": 39.961731,
+    "start_lon": -75.187881,
+    "Station_ID": 3365,
+    "Station_Name": "32nd & Baring, Drexel Park",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.976471,
+    "start_lon": -75.173622,
+    "Station_ID": 3368,
+    "Station_Name": "23rd & Master",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 40.007721,
+    "start_lon": -75.19194,
+    "Station_ID": 3369,
+    "Station_Name": "Ridge & Ferry",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 40.0163,
+    "start_lon": -75.21241,
+    "Station_ID": 3370,
+    "Station_Name": "Pencoyd Bridge",
+    "Station_Starts": 1,
+    "Station_Ends": 0,
+    "Station_Activity": 1
+  },
+  {
+    "start_lat": 39.9534,
+    "start_lon": -75.154297,
+    "Station_ID": 3371,
+    "Station_Name": "9th & Arch",
+    "Station_Starts": 7,
+    "Station_Ends": 8,
+    "Station_Activity": 15
+  },
+  {
+    "start_lat": 39.925282,
+    "start_lon": -75.186722,
+    "Station_ID": 3372,
+    "Station_Name": "24th & Jackson",
+    "Station_Starts": 1,
+    "Station_Ends": 4,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.958172,
+    "start_lon": -75.156677,
+    "Station_ID": 3373,
+    "Station_Name": "11th & Wood",
+    "Station_Starts": 13,
+    "Station_Ends": 10,
+    "Station_Activity": 23
+  },
+  {
+    "start_lat": 39.972801,
+    "start_lon": -75.17971,
+    "Station_ID": 3374,
+    "Station_Name": "26th & Poplar",
+    "Station_Starts": 10,
+    "Station_Ends": 15,
+    "Station_Activity": 25
+  },
+  {
+    "start_lat": 39.960361,
+    "start_lon": -75.140198,
+    "Station_ID": 3375,
+    "Station_Name": "Spring Garden Station, MFL",
+    "Station_Starts": 9,
+    "Station_Ends": 10,
+    "Station_Activity": 19
+  },
+  {
+    "start_lat": 39.971828,
+    "start_lon": -75.148781,
+    "Station_ID": 3376,
+    "Station_Name": "Thompson & Franklin",
+    "Station_Starts": 2,
+    "Station_Ends": 5,
+    "Station_Activity": 7
+  },
+  {
+    "start_lat": 39.952381,
+    "start_lon": -75.147278,
+    "Station_ID": 3378,
+    "Station_Name": "4th & Arch",
+    "Station_Starts": 5,
+    "Station_Ends": 4,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.948448,
+    "start_lon": -75.218071,
+    "Station_ID": 3381,
+    "Station_Name": "48th & Baltimore",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.950378,
+    "start_lon": -75.173088,
+    "Station_ID": 3382,
+    "Station_Name": "Walnut & Rittenhouse",
+    "Station_Starts": 13,
+    "Station_Ends": 11,
+    "Station_Activity": 24
+  },
+  {
+    "start_lat": 39.966339,
+    "start_lon": -75.14222,
+    "Station_ID": 3383,
+    "Station_Name": "3rd & Wildey, Liberty Lands Park",
+    "Station_Starts": 1,
+    "Station_Ends": 5,
+    "Station_Activity": 6
+  },
+  {
+    "start_lat": 39.949741,
+    "start_lon": -75.154243,
+    "Station_ID": 3385,
+    "Station_Name": "8th & Chestnut",
+    "Station_Starts": 3,
+    "Station_Ends": 5,
+    "Station_Activity": 8
+  },
+  {
+    "start_lat": 39.970119,
+    "start_lon": -75.14666,
+    "Station_ID": 3387,
+    "Station_Name": "6th & Girard",
+    "Station_Starts": 1,
+    "Station_Ends": 4,
+    "Station_Activity": 5
+  },
+  {
+    "start_lat": 39.966339,
+    "start_lon": -75.15097,
+    "Station_ID": 3388,
+    "Station_Name": "8th & Brown",
+    "Station_Starts": 1,
+    "Station_Ends": 1,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.944309,
+    "start_lon": -75.181282,
+    "Station_ID": 3389,
+    "Station_Name": "Grays Ferry & Pemberton",
+    "Station_Starts": 3,
+    "Station_Ends": 8,
+    "Station_Activity": 11
+  },
+  {
+    "start_lat": 39.959999,
+    "start_lon": -75.224403,
+    "Station_ID": 3390,
+    "Station_Name": "52nd St Station, MFL",
+    "Station_Starts": 0,
+    "Station_Ends": 2,
+    "Station_Activity": 2
+  },
+  {
+    "start_lat": 39.99667,
+    "start_lon": -75.234818,
+    "Station_ID": 3391,
+    "Station_Name": "54th & City Ave",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.936329,
+    "start_lon": -75.194473,
+    "Station_ID": 3392,
+    "Station_Name": "30th & Reed",
+    "Station_Starts": 1,
+    "Station_Ends": 2,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.96727,
+    "start_lon": -75.139992,
+    "Station_ID": 3393,
+    "Station_Name": "2nd & George",
+    "Station_Starts": 7,
+    "Station_Ends": 6,
+    "Station_Activity": 13
+  },
+  {
+    "start_lat": 39.924,
+    "start_lon": -75.169594,
+    "Station_ID": 3394,
+    "Station_Name": "Broad & Snyder",
+    "Station_Starts": 7,
+    "Station_Ends": 5,
+    "Station_Activity": 12
+  },
+  {
+    "start_lat": 39.93866,
+    "start_lon": -75.163513,
+    "Station_ID": 3395,
+    "Station_Name": "12th & Carpenter",
+    "Station_Starts": 8,
+    "Station_Ends": 6,
+    "Station_Activity": 14
+  },
+  {
+    "start_lat": 39.923271,
+    "start_lon": -75.182098,
+    "Station_ID": 3396,
+    "Station_Name": "21st & Passyunk",
+    "Station_Starts": 1,
+    "Station_Ends": 5,
+    "Station_Activity": 6
+  },
+  {
+    "start_lat": 39.93906,
+    "start_lon": -75.178238,
+    "Station_ID": 3397,
+    "Station_Name": "21st & Washington",
+    "Station_Starts": 7,
+    "Station_Ends": 6,
+    "Station_Activity": 13
+  },
+  {
+    "start_lat": 39.915508,
+    "start_lon": -75.154739,
+    "Station_ID": 3398,
+    "Station_Name": "4th & Oregon",
+    "Station_Starts": 2,
+    "Station_Ends": 1,
+    "Station_Activity": 3
+  },
+  {
+    "start_lat": 39.975021,
+    "start_lon": -75.14006,
+    "Station_ID": 3399,
+    "Station_Name": "American & Oxford",
+    "Station_Starts": 4,
+    "Station_Ends": 5,
+    "Station_Activity": 9
+  },
+  {
+    "start_lat": 39.949001,
+    "start_lon": -75.160812,
+    "Station_ID": 3400,
+    "Station_Name": "12th & Walnut",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.941669,
+    "start_lon": -75.165024,
+    "Station_ID": 3405,
+    "Station_Name": "Fitzwater & Juniper",
+    "Station_Starts": 6,
+    "Station_Ends": 4,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.9785,
+    "start_lon": -75.139107,
+    "Station_ID": 3407,
+    "Station_Name": "American & Berks",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.9216,
+    "start_lon": -75.150002,
+    "Station_ID": 3408,
+    "Station_Name": "2nd & Snyder",
+    "Station_Starts": 5,
+    "Station_Ends": 5,
+    "Station_Activity": 10
+  },
+  {
+    "start_lat": 39.955078,
+    "start_lon": -75.151283,
+    "Station_ID": 3409,
+    "Station_Name": "7th & Race, Franklin Square",
+    "Station_Starts": 2,
+    "Station_Ends": 2,
+    "Station_Activity": 4
+  },
+  {
+    "start_lat": 39.942009,
+    "start_lon": -75.218384,
+    "Station_ID": 3410,
+    "Station_Name": "51st & Regent, Kingsessing Library",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  },
+  {
+    "start_lat": 39.96693,
+    "start_lon": -75.233589,
+    "Station_ID": 3411,
+    "Station_Name": "57th & Westminster",
+    "Station_Starts": 0,
+    "Station_Ends": 0,
+    "Station_Activity": 0
+  }
+    ];
+
+   // Convert to heatmap arrays with weights
+    const startsHeat = stations.map(s => [s.start_lat, s.start_lon, s.Station_Starts]);
+    const endsHeat   = stations.map(s => [s.start_lat, s.start_lon, s.Station_Ends]);
+    const totalHeat  = stations.map(s => [s.start_lat, s.start_lon, s.Station_Activity]);
+
+    // Base map
+    const map = L.map('map').setView([39.95, -75.16], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
+    }).addTo(map);
+
+    // Heat layers
+    let intensity = 1.0;
+    const startsLayer = L.heatLayer(startsHeat, {radius: 25, blur: 15, max: intensity});
+    const endsLayer   = L.heatLayer(endsHeat,   {radius: 25, blur: 15, max: intensity});
+    const totalLayer  = L.heatLayer(totalHeat,  {radius: 25, blur: 15, max: intensity});
+
+    // Marker layer
+    const markersLayer = L.layerGroup(
+      stations.map(s => L.marker([s.start_lat, s.start_lon])
+        .bindPopup(`<b>${s.Station_Name}</b><br>
+          Starts: ${s.Station_Starts}<br>
+          Ends: ${s.Station_Ends}<br>
+          Activity: ${s.Station_Activity}`)
+      )
+    );
+
+    // Layer toggle
+    const overlayMaps = {
+      "Trip Starts (Heat)": startsLayer,
+      "Trip Ends (Heat)": endsLayer,
+      "Total Activity (Heat)": totalLayer,
+      "Station Markers": markersLayer
+    };
+    L.control.layers(null, overlayMaps).addTo(map);
+
+    // Default: show total heat + markers
+    totalLayer.addTo(map);
+    markersLayer.addTo(map);
+
+    // Intensity slider
+    const slider = document.getElementById("intensitySlider");
+    const label  = document.getElementById("intensityVal");
+
+    slider.addEventListener("input", () => {
+      intensity = parseFloat(slider.value);
+      label.innerText = intensity.toFixed(1);
+
+      startsLayer.setOptions({max: intensity});
+      endsLayer.setOptions({max: intensity});
+      totalLayer.setOptions({max: intensity});
+    });
+  </script>
+</body>
+</html>
+
+
+

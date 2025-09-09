@@ -16,13 +16,12 @@
   <h2 style="text-align:center;">Bike Station Heatmap</h2>
   <div id="map"></div>
 
-  <!-- Intensity slider -->
+  <!-- Controls -->
   <div id="controls">
     <label for="intensitySlider">Intensity: </label>
     <input type="range" id="intensitySlider" min="0.2" max="3" step="0.1" value="1">
     <span id="sliderValue">1.0</span>
     <br>
-    <!-- Layer toggles -->
     <button onclick="toggleLayer(startsLayer)">Toggle Starts</button>
     <button onclick="toggleLayer(endsLayer)">Toggle Ends</button>
     <button onclick="toggleLayer(totalLayer)">Toggle Total</button>
@@ -48,8 +47,28 @@
     Papa.parse("https://docs.google.com/spreadsheets/d/e/2PACX-1vS6hPbcRfXvDoEdor5z93DSF8_gaL7XDragNFXxtShmDZyEofT5lt0XahtlNDeJa36EP_B4ErL31u0n/pub?gid=1084593066&single=true&output=csv", {
       download: true,
       header: true,
+      skipEmptyLines: true,
       complete: function(results) {
-        stations = results.data.filter(r => r.start_lat && r.start_lon); // remove blanks
+        console.log("Raw parsed:", results.data);
+
+        // Clean + filter stations
+        stations = results.data.map(r => {
+          return {
+            lat: parseFloat((r.start_lat || "").trim()),
+            lon: parseFloat((r.start_lon || "").trim()),
+            name: (r.Station_Name || "").trim(),
+            starts: parseInt(r.Station_Starts || 0, 10),
+            ends: parseInt(r.Station_Ends || 0, 10),
+            activity: parseInt(r.Station_Activity || 0, 10)
+          };
+        }).filter(r => !isNaN(r.lat) && !isNaN(r.lon));
+
+        console.log("Cleaned stations:", stations);
+
+        if (stations.length === 0) {
+          alert("No valid stations found. Check CSV headers!");
+          return;
+        }
 
         // Build heatmap datasets
         const heatData = makeHeat(multiplier);
@@ -60,22 +79,26 @@
 
         // Markers
         markers = L.layerGroup(stations.map(s =>
-          L.circleMarker([+s.start_lat, +s.start_lon], {
+          L.circleMarker([s.lat, s.lon], {
             radius: 4, color: "blue", fillOpacity: 0.7
-          }).bindPopup(`<b>${s.Station_Name}</b><br>
-            Starts: ${s.Station_Starts}<br>
-            Ends: ${s.Station_Ends}<br>
-            Activity: ${s.Station_Activity}`)
-        ));
+          }).bindPopup(`<b>${s.name}</b><br>
+            Starts: ${s.starts}<br>
+            Ends: ${s.ends}<br>
+            Activity: ${s.activity}`)
+        )).addTo(map);
+
+        // Auto-zoom to fit all stations
+        const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lon]));
+        map.fitBounds(bounds);
       }
     });
 
-    // Build heatmap arrays
+    // Build heat datasets
     function makeHeat(mult) {
       return {
-        starts: stations.map(s => [+s.start_lat, +s.start_lon, +s.Station_Starts * mult]),
-        ends:   stations.map(s => [+s.start_lat, +s.start_lon, +s.Station_Ends * mult]),
-        total:  stations.map(s => [+s.start_lat, +s.start_lon, +s.Station_Activity * mult])
+        starts: stations.map(s => [s.lat, s.lon, s.starts * mult]),
+        ends:   stations.map(s => [s.lat, s.lon, s.ends * mult]),
+        total:  stations.map(s => [s.lat, s.lon, s.activity * mult])
       };
     }
 
@@ -102,7 +125,5 @@
       }
     }
   </script>
-  <br><br><br><br>
-  <h1>Hello World</h1>
 </body>
 </html>
